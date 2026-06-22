@@ -1,5 +1,8 @@
 plugins {
     id "java-base"
+    // Minotaur: official Modrinth Gradle plugin. Declared here, applied per platform
+    // module below so a single `./gradlew modrinth` publishes every jar at once.
+    id "com.modrinth.minotaur" version "2.+" apply false
 }
 
 group = project.maven_group
@@ -42,17 +45,87 @@ subprojects {
 
 // Minecraft 26.1.x requires the Java 25 toolchain; every other module stays on 21
 // so the shared core can be consumed by both platform modules.
-def mc261x = findProject(":axisruler-mc261x")
-if (mc261x != null) {
-    configure(mc261x) {
-        java {
-            toolchain {
-                languageVersion = JavaLanguageVersion.of(25)
-            }
+def java25Modules = [":axisruler-mc261x", ":axisruler-neoforge-mc261x"]
+        .collect { findProject(it) }
+        .findAll { it != null }
+configure(java25Modules) {
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
         }
+    }
 
-        tasks.withType(JavaCompile).configureEach {
-            options.release = 25
+    tasks.withType(JavaCompile).configureEach {
+        options.release = 25
+    }
+}
+
+// === Modrinth publishing (Minotaur) ====================================================
+// One `./gradlew modrinth` uploads all platform jars as separate versions to the same
+// Modrinth project, each tagged with its correct game version and loader.
+//
+//   Token (never commit it):   set the MODRINTH_TOKEN environment variable
+//   Project slug:              `modrinth_project_id` in gradle.properties (default: axisruler)
+//   Publish everything:        MODRINTH_TOKEN=xxxx ./gradlew modrinth
+//   Dry run (no upload):       ./gradlew modrinth -Pmodrinth_debug=true
+//
+// `loader` is the Modrinth loader id, `upload` is the task whose artifact gets sent
+// (Fabric/Loom = remapJar, NeoForge/ModDevGradle = jar). `game` is the list of
+// Minecraft versions the file is compatible with.
+def modrinthModules = [
+        ":axisruler-mc1214"          : [game: ["1.21.4"],                    loader: "fabric",   upload: "remapJar"],
+        ":axisruler-mc1218"          : [game: ["1.21.8"],                    loader: "fabric",   upload: "remapJar"],
+        ":axisruler-mc12111"         : [game: ["1.21.11"],                   loader: "fabric",   upload: "remapJar"],
+        // mc261x uses plain fabric-loom on Mojang mappings (no remap step), so its
+        // distributable is `jar`, unlike the Yarn modules which ship `remapJar`.
+        ":axisruler-mc261x"          : [game: ["26.1", "26.1.1", "26.1.2"],  loader: "fabric",   upload: "jar"],
+        ":axisruler-neoforge-mc1214" : [game: ["1.21.4"],                    loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc1218" : [game: ["1.21.8"],                    loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc12111": [game: ["1.21.11"],                   loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc261x" : [game: ["26.1", "26.1.1", "26.1.2"],  loader: "neoforge", upload: "jar"],
+]
+
+def modrinthProjectId = project.findProperty("modrinth_project_id") ?: "axisruler"
+def modrinthDebug = project.hasProperty("modrinth_debug")
+
+modrinthModules.each { path, cfg ->
+    def proj = findProject(path)
+    if (proj == null) {
+        return
+    }
+    proj.pluginManager.apply("com.modrinth.minotaur")
+
+    // Configure after the module's own build script runs, so the upload task
+    // (remapJar / jar) and the resolved project version are available. `p` is the
+    // platform subproject; qualify everything through it so Groovy resolves the
+    // `modrinth` extension on the subproject rather than the root project.
+    proj.afterEvaluate { p ->
+        def loaderLabel = cfg.loader == "neoforge" ? "NeoForge" : "Fabric"
+        def mcLabel = cfg.game.size() > 1 ? "${cfg.game.first()}-${cfg.game.last()}" : cfg.game.first()
+        // Unique per module: e.g. 1.1.0+mc12111 / 1.1.0+neoforge-mc12111
+        def uniqueSuffix = p.name.replaceFirst("^${mod_id}-", "")
+        def changelogFile = rootProject.file("CHANGELOG.md")
+
+        p.modrinth {
+            token = System.getenv("MODRINTH_TOKEN")
+            projectId = modrinthProjectId
+            versionNumber = "${p.version}+${uniqueSuffix}"
+            versionName = "AxisRuler ${p.version} (${loaderLabel} ${mcLabel})"
+            versionType = "release"
+            uploadFile = p.tasks.named(cfg.upload)
+            gameVersions = cfg.game
+            loaders = [cfg.loader]
+            // We set loaders explicitly above; don't let auto-detection second-guess it.
+            detectLoaders = false
+            debugMode = modrinthDebug
+            changelog = changelogFile.exists() ? changelogFile.text : "See ${mod_sources}/releases"
+
+            if (cfg.loader == "fabric") {
+                dependencies {
+                    required.project "fabric-api"
+                    optional.project "modmenu"
+                }
+            }
         }
     }
 }

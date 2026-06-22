@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "${modLicense}"
+issueTrackerURL = "${modIssues}"
+
+[[mods]]
+modId = "${modId}"
+version = "${version}"
+displayName = "${modName}"
+authors = "${modAuthors}"
+# Client-only mod: never required on the server, so any client may join any server.
+displayTest = "IGNORE_ALL_VERSION"
+description = '''
+${modDescription}
+'''
+logoFile = "assets/axisruler/icon.png"
+displayURL = "${modHomepage}"
+
+[[mods.dependencies.${modId}]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neoforgeRange}"
+ordering = "NONE"
+side = "CLIENT"
+
+[[mods.dependencies.${modId}]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraftRange}"
+ordering = "NONE"
+side = "CLIENT"

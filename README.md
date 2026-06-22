@@ -1,6 +1,6 @@
 # AxisRuler
 
-AxisRuler is a client-side Fabric Minecraft mod for precise visual block measurement.
+AxisRuler is a client-side Minecraft mod for precise visual block measurement, available for Fabric and NeoForge.
 
 It shows exact X, Y, and Z size in-world, renders the measured area around your selection, and keeps the result readable while you build.
 
@@ -65,33 +65,41 @@ You can adjust:
 
 AxisRuler currently supports:
 
-- Minecraft `1.21.4`
-- Minecraft `1.21.8`
-- Minecraft `1.21.11`
-- Minecraft `26.1`, `26.1.1`, `26.1.2`
+| Minecraft | Fabric | NeoForge |
+| --- | --- | --- |
+| `1.21.4` | yes | yes |
+| `1.21.8` | yes | yes |
+| `1.21.11` | yes | yes |
+| `26.1`, `26.1.1`, `26.1.2` | yes | yes |
 
-There are separate release files for each Minecraft branch.
+There are separate release files for each Minecraft branch and loader.
 
 Release files:
 
-- `axisruler-mc1214-1.1.0.jar`
-- `axisruler-mc1218-1.1.0.jar`
-- `axisruler-mc12111-1.1.0.jar`
-- `axisruler-mc261x-1.1.0.jar`
+- `axisruler-mc1214-1.2.0.jar` (Fabric)
+- `axisruler-mc1218-1.2.0.jar` (Fabric)
+- `axisruler-mc12111-1.2.0.jar` (Fabric)
+- `axisruler-mc261x-1.2.0.jar` (Fabric)
+- `axisruler-neoforge-mc1214-1.2.0.jar` (NeoForge)
+- `axisruler-neoforge-mc1218-1.2.0.jar` (NeoForge)
+- `axisruler-neoforge-mc12111-1.2.0.jar` (NeoForge)
+- `axisruler-neoforge-mc261x-1.2.0.jar` (NeoForge)
 
 ## Install
 
-You should have:
+On Fabric you should have:
 
 - Fabric Loader
 - Fabric API
 - Mod Menu for config screen support
 
-Then place the correct AxisRuler jar into your `mods` folder.
+On NeoForge you only need NeoForge itself (the config screen is reached from the in-game mod list).
+
+Then place the correct AxisRuler jar (matching your Minecraft version and loader) into your `mods` folder.
 
 ## Notes
 
-- Fabric only
+- Fabric and NeoForge
 - Client-side only
-- Safe on multiplayer clients
+- Safe on multiplayer clients (client may join servers that do not have the mod)
 - No server installation required
