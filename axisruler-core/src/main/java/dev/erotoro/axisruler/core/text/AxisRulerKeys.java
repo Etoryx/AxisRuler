@@ -20,6 +20,8 @@ public final class AxisRulerKeys {
     public static final String KEY_COPY_MEASUREMENT = "key.axisruler.copy_measurement";
     public static final String KEY_PIN = "key.axisruler.pin";
     public static final String KEY_CLEAR_PINNED = "key.axisruler.clear_pinned";
+    public static final String KEY_UNDO = "key.axisruler.undo";
+    public static final String KEY_SHORTCUT_MODIFIER = "key.axisruler.shortcut_modifier";
 
     public static final String MESSAGE_POINT_A_SET = "axisruler.message.point_a_set";
     public static final String MESSAGE_POINT_B_SET = "axisruler.message.point_b_set";
@@ -33,6 +35,9 @@ public final class AxisRulerKeys {
     public static final String MESSAGE_LINE = "axisruler.message.line";
     public static final String MESSAGE_NO_BLOCK_TARGET = "axisruler.message.no_block_target";
     public static final String MESSAGE_MEASUREMENT_COPIED = "axisruler.message.measurement_copied";
+    public static final String MESSAGE_COMMANDS_COPIED = "axisruler.message.commands_copied";
+    public static final String MESSAGE_SELECTION_RESTORED = "axisruler.message.selection_restored";
+    public static final String MESSAGE_NOTHING_TO_UNDO = "axisruler.message.nothing_to_undo";
     public static final String MESSAGE_NOTHING_TO_COPY = "axisruler.message.nothing_to_copy";
     public static final String MESSAGE_COPY_DIFFERENT_WORLDS = "axisruler.message.copy_different_worlds";
     public static final String MESSAGE_ENABLED = "axisruler.message.enabled";

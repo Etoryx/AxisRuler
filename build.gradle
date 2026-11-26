@@ -43,9 +43,11 @@ subprojects {
     }
 }
 
-// Minecraft 26.1.x requires the Java 25 toolchain; every other module stays on 21
+// Minecraft 26.1+ requires the Java 25 toolchain; every other module stays on 21
 // so the shared core can be consumed by both platform modules.
-def java25Modules = [":axisruler-mc261x", ":axisruler-neoforge-mc261x"]
+def java25Modules = [":axisruler-mc261x", ":axisruler-neoforge-mc261x",
+                     ":axisruler-mc262x", ":axisruler-neoforge-mc262x",
+                     ":axisruler-mc263x", ":axisruler-neoforge-mc263x"]
         .collect { findProject(it) }
         .findAll { it != null }
 configure(java25Modules) {
@@ -58,6 +60,15 @@ configure(java25Modules) {
     tasks.withType(JavaCompile).configureEach {
         options.release = 25
     }
+}
+
+// Share the submit-based client implementation between 26.2 and 26.3 per loader.
+// Each target supplies its own small keyboard adapter (GLFW or SDL).
+["axisruler", "axisruler-neoforge"].each { platform ->
+    def mc262 = project(":${platform}-mc262x")
+    def mc263 = project(":${platform}-mc263x")
+    mc262.sourceSets.main.java.srcDir(rootProject.file("platform-support/mc262x/java"))
+    mc263.sourceSets.main.java.srcDirs(mc262.file("src/main/java"), rootProject.file("platform-support/mc263x/java"))
 }
 
 // === Modrinth publishing (Minotaur) ====================================================
@@ -79,10 +90,14 @@ def modrinthModules = [
         // mc261x uses plain fabric-loom on Mojang mappings (no remap step), so its
         // distributable is `jar`, unlike the Yarn modules which ship `remapJar`.
         ":axisruler-mc261x"          : [game: ["26.1", "26.1.1", "26.1.2"],  loader: "fabric",   upload: "jar"],
+        ":axisruler-mc262x"          : [game: ["26.2"],                      loader: "fabric",   upload: "jar"],
+        ":axisruler-mc263x"          : [game: ["26.3"],                      loader: "fabric",   upload: "jar"],
         ":axisruler-neoforge-mc1214" : [game: ["1.21.4"],                    loader: "neoforge", upload: "jar"],
         ":axisruler-neoforge-mc1218" : [game: ["1.21.8"],                    loader: "neoforge", upload: "jar"],
         ":axisruler-neoforge-mc12111": [game: ["1.21.11"],                   loader: "neoforge", upload: "jar"],
-        ":axisruler-neoforge-mc261x" : [game: ["26.1", "26.1.1", "26.1.2"],  loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc261x" : [game: ["26.1.2"],                    loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc262x" : [game: ["26.2"],                      loader: "neoforge", upload: "jar"],
+        ":axisruler-neoforge-mc263x" : [game: ["26.3"],                      loader: "neoforge", upload: "jar"],
 ]
 
 def modrinthProjectId = project.findProperty("modrinth_project_id") ?: "axisruler"

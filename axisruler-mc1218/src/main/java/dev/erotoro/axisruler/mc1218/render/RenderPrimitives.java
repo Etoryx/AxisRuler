@@ -155,14 +155,8 @@ public final class RenderPrimitives {
     }
 
     private static int backgroundColor(LabelBackgroundMode mode, int color) {
-        return switch (mode) {
-            case NONE -> 0x00000000;
-            case SUBTLE -> withAlpha(color, Math.round(((color >>> 24) & 0xFF) * 0.78F));
-            case SOLID -> color;
-        };
-    }
-
-    private static int withAlpha(int color, int alpha) {
-        return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
+        // Callers pass AxisRulerConfig#effectiveLabelBackgroundColorArgb, which already applies the
+        // mode's alpha scaling, so SUBTLE must not be scaled a second time here.
+        return mode == LabelBackgroundMode.NONE ? 0x00000000 : color;
     }
 }

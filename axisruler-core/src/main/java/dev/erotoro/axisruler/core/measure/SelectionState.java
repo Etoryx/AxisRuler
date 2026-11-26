@@ -8,6 +8,11 @@ public final class SelectionState {
     private final PinnedMeasurements pinned = new PinnedMeasurements();
     private volatile MeasurePoint pointA;
     private volatile MeasurePoint pointB;
+    // One-slot undo. Touched only from the client tick thread (unlike the volatile render-visible
+    // state above), so plain fields are enough.
+    private MeasurePoint undoPointA;
+    private MeasurePoint undoPointB;
+    private boolean undoAvailable;
     private volatile MeasurePoint previewTarget;
     private volatile String currentWorldKey;
     private volatile SelectionMode mode = SelectionMode.BOX;
@@ -130,30 +135,61 @@ public final class SelectionState {
     }
 
     public void setPointA(MeasurePoint pointA) {
-        this.pointA = Objects.requireNonNull(pointA, "pointA");
+        Objects.requireNonNull(pointA, "pointA");
+        if (pointA.equals(this.pointA)) {
+            return;
+        }
+        rememberForUndo();
+        this.pointA = pointA;
     }
 
     public void setPointB(MeasurePoint pointB) {
-        this.pointB = Objects.requireNonNull(pointB, "pointB");
+        Objects.requireNonNull(pointB, "pointB");
+        if (pointB.equals(this.pointB)) {
+            return;
+        }
+        rememberForUndo();
+        this.pointB = pointB;
     }
 
     public void setCurrentWorldKey(String currentWorldKey) {
-        if (currentWorldKey == null || currentWorldKey.isBlank()) {
-            this.currentWorldKey = null;
+        String nextWorldKey = currentWorldKey == null || currentWorldKey.isBlank() ? null : currentWorldKey;
+        if (Objects.equals(this.currentWorldKey, nextWorldKey)) {
             return;
         }
-        this.currentWorldKey = currentWorldKey;
+        pointA = null;
+        pointB = null;
+        previewTarget = null;
+        undoPointA = null;
+        undoPointB = null;
+        undoAvailable = false;
+        if (nextWorldKey == null) {
+            pinned.clear();
+        }
+        this.currentWorldKey = nextWorldKey;
     }
 
     public void clearPointA() {
+        if (pointA == null) {
+            return;
+        }
+        rememberForUndo();
         pointA = null;
     }
 
     public void clearPointB() {
+        if (pointB == null) {
+            return;
+        }
+        rememberForUndo();
         pointB = null;
     }
 
     public void clearPoints() {
+        if (pointA == null && pointB == null) {
+            return;
+        }
+        rememberForUndo();
         pointA = null;
         pointB = null;
     }
@@ -162,10 +198,35 @@ public final class SelectionState {
         if (pointA == null || pointB == null) {
             return false;
         }
+        rememberForUndo();
         MeasurePoint previousPointA = pointA;
         pointA = pointB;
         pointB = previousPointA;
         return true;
+    }
+
+    /**
+     * Restores the points as they were before the most recent point mutation (set/clear/swap).
+     * The replaced state becomes the new undo slot, so pressing undo twice acts as redo.
+     * Returns {@code false} when no mutation has been recorded yet.
+     */
+    public boolean undoLastPointChange() {
+        if (!undoAvailable) {
+            return false;
+        }
+        MeasurePoint currentA = pointA;
+        MeasurePoint currentB = pointB;
+        pointA = undoPointA;
+        pointB = undoPointB;
+        undoPointA = currentA;
+        undoPointB = currentB;
+        return true;
+    }
+
+    private void rememberForUndo() {
+        undoPointA = pointA;
+        undoPointB = pointB;
+        undoAvailable = true;
     }
 
     public void setMode(SelectionMode mode) {

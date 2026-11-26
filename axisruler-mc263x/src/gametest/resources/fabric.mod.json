@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "axisruler_client_tests",
+  "version": "1.0.0",
+  "name": "AxisRuler Client Tests",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": ["dev.erotoro.axisruler.gametest.ShortcutModifierTest"]
+  },
+  "depends": {
+    "axisruler": "*",
+    "fabric-client-gametest-api-v1": "*"
+  }
+}

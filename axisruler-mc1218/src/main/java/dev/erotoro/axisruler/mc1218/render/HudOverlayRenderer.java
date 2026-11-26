@@ -84,12 +84,23 @@ public final class HudOverlayRenderer {
         if (pinnedCount > 0) {
             hudData = withPinnedRow(hudData, pinnedCount, textRenderer, config);
         }
-        int panelX = config.resolveHudX(context.getScaledWindowWidth(), hudData.width());
-        int panelY = config.resolveHudY(context.getScaledWindowHeight(), hudData.height());
-        drawPanel(context, config, panelX, panelY, hudData.width(), hudData.height());
-        drawTitle(context, textRenderer, config, panelX, panelY, hudData.width(), hudData.title());
-        for (int row = 0; row < hudData.labels().length; row++) {
-            drawRow(context, textRenderer, config, panelX, panelY, row, hudData.labels()[row], hudData.values()[row], hudData.colors()[row]);
+        float scale = config.hudScale();
+        int scaledWidth = Math.round(hudData.width() * scale);
+        int scaledHeight = Math.round(hudData.height() * scale);
+        int originX = config.resolveHudX(context.getScaledWindowWidth(), scaledWidth);
+        int originY = config.resolveHudY(context.getScaledWindowHeight(), scaledHeight);
+        var pose = context.getMatrices();
+        pose.pushMatrix();
+        try {
+            pose.translate(originX, originY);
+            pose.scale(scale, scale);
+            drawPanel(context, config, 0, 0, hudData.width(), hudData.height());
+            drawTitle(context, textRenderer, config, 0, 0, hudData.width(), hudData.title());
+            for (int row = 0; row < hudData.labels().length; row++) {
+                drawRow(context, textRenderer, config, 0, 0, row, hudData.labels()[row], hudData.values()[row], hudData.colors()[row]);
+            }
+        } finally {
+            pose.popMatrix();
         }
     }
 
@@ -218,9 +229,9 @@ public final class HudOverlayRenderer {
     }
 
     private void drawTitle(DrawContext context, TextRenderer textRenderer, AxisRulerConfig config, int panelX, int panelY, int panelWidth, String title) {
-        int padding = scaled(config, PANEL_PADDING);
+        int padding = PANEL_PADDING;
         drawText(context, textRenderer, config, title, panelX + padding, panelY + padding, config.hudTitleColorArgb());
-        int separatorY = panelY + padding + scaled(config, ROW_HEIGHT) - 3;
+        int separatorY = panelY + padding + ROW_HEIGHT - 3;
         context.fill(panelX + padding, separatorY, panelX + panelWidth - padding, separatorY + 1, config.effectiveHudAccentColorArgb());
     }
 
@@ -235,9 +246,9 @@ public final class HudOverlayRenderer {
             String value,
             int valueColor
     ) {
-        int padding = scaled(config, PANEL_PADDING);
-        int rowHeight = scaled(config, ROW_HEIGHT);
-        int labelColumnWidth = scaled(config, LABEL_COLUMN_WIDTH);
+        int padding = PANEL_PADDING;
+        int rowHeight = ROW_HEIGHT;
+        int labelColumnWidth = LABEL_COLUMN_WIDTH;
         int y = panelY + padding + rowHeight + row * rowHeight;
         int labelX = panelX + padding;
         int valueX = labelX + labelColumnWidth;
@@ -246,24 +257,19 @@ public final class HudOverlayRenderer {
     }
 
     private int panelWidth(TextRenderer textRenderer, AxisRulerConfig config, String title, String[] values) {
-        int padding = scaled(config, PANEL_PADDING);
-        int labelColumnWidth = scaled(config, LABEL_COLUMN_WIDTH);
+        int padding = PANEL_PADDING;
+        int labelColumnWidth = LABEL_COLUMN_WIDTH;
         int longestValueWidth = textRenderer.getWidth(title);
         for (String value : values) {
             longestValueWidth = Math.max(longestValueWidth, textRenderer.getWidth(value));
         }
-        return Math.max(scaled(config, PANEL_MIN_WIDTH), padding * 2 + labelColumnWidth + longestValueWidth);
+        return Math.max(PANEL_MIN_WIDTH, padding * 2 + labelColumnWidth + longestValueWidth);
     }
 
     private int panelHeight(AxisRulerConfig config, int rows) {
-        int padding = scaled(config, PANEL_PADDING);
-        int rowHeight = scaled(config, ROW_HEIGHT);
+        int padding = PANEL_PADDING;
+        int rowHeight = ROW_HEIGHT;
         return padding * 2 + rowHeight + rows * rowHeight;
-    }
-
-    private int scaled(AxisRulerConfig config, int value) {
-        float scale = Math.max(1.0F, config.hudScale());
-        return Math.max(1, Math.round(value * scale));
     }
 
     private void drawText(DrawContext context, TextRenderer textRenderer, AxisRulerConfig config, String text, int x, int y, int color) {

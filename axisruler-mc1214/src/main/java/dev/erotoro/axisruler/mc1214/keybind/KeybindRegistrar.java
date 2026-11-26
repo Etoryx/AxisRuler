@@ -21,6 +21,8 @@ public final class KeybindRegistrar {
     private KeyBinding copyMeasurement;
     private KeyBinding pinMeasurement;
     private KeyBinding clearPinned;
+    private KeyBinding undoSelection;
+    private KeyBinding shortcutModifier;
     private boolean registered;
 
     public void register() {
@@ -40,6 +42,8 @@ public final class KeybindRegistrar {
         copyMeasurement = registerKey(AxisRulerKeys.KEY_COPY_MEASUREMENT, GLFW.GLFW_KEY_M);
         pinMeasurement = registerKey(AxisRulerKeys.KEY_PIN, GLFW.GLFW_KEY_P);
         clearPinned = registerKey(AxisRulerKeys.KEY_CLEAR_PINNED, GLFW.GLFW_KEY_U);
+        undoSelection = registerKey(AxisRulerKeys.KEY_UNDO, GLFW.GLFW_KEY_B);
+        shortcutModifier = registerKey(AxisRulerKeys.KEY_SHORTCUT_MODIFIER, GLFW.GLFW_KEY_LEFT_ALT);
         keyBindings = List.of(
                 setPointA,
                 setPointB,
@@ -52,7 +56,8 @@ public final class KeybindRegistrar {
                 toggleLine,
                 copyMeasurement,
                 pinMeasurement,
-                clearPinned
+                clearPinned,
+                undoSelection
         );
         registered = true;
     }
@@ -60,6 +65,11 @@ public final class KeybindRegistrar {
     public List<KeyBinding> keyBindings() {
         ensureRegistered();
         return keyBindings;
+    }
+
+    public KeyBinding shortcutModifier() {
+        ensureRegistered();
+        return shortcutModifier;
     }
 
     public KeyBinding setPointA() {
@@ -120,6 +130,11 @@ public final class KeybindRegistrar {
     public KeyBinding clearPinned() {
         ensureRegistered();
         return clearPinned;
+    }
+
+    public KeyBinding undoSelection() {
+        ensureRegistered();
+        return undoSelection;
     }
 
     private KeyBinding registerKey(String translationKey, int defaultKey) {

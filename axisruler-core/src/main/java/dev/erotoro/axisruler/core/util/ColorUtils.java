@@ -1,8 +1,14 @@
 package dev.erotoro.axisruler.core.util;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 public final class ColorUtils {
+    private static final Pattern HASH_RGB = Pattern.compile("#[0-9A-F]{6}");
+    private static final Pattern HASH_ARGB = Pattern.compile("#[0-9A-F]{8}");
+    private static final Pattern BARE_RGB = Pattern.compile("[0-9A-F]{6}");
+    private static final Pattern BARE_ARGB = Pattern.compile("[0-9A-F]{8}");
+
     private ColorUtils() {
     }
 
@@ -46,16 +52,16 @@ public final class ColorUtils {
             return fallback;
         }
         String trimmed = value.trim().toUpperCase(Locale.ROOT);
-        if (trimmed.matches("#[0-9A-F]{6}")) {
+        if (HASH_RGB.matcher(trimmed).matches()) {
             return (int) Long.parseLong("FF" + trimmed.substring(1), 16);
         }
-        if (trimmed.matches("#[0-9A-F]{8}")) {
+        if (HASH_ARGB.matcher(trimmed).matches()) {
             return (int) Long.parseLong(trimmed.substring(1), 16);
         }
-        if (trimmed.matches("[0-9A-F]{6}")) {
+        if (BARE_RGB.matcher(trimmed).matches()) {
             return (int) Long.parseLong("FF" + trimmed, 16);
         }
-        if (trimmed.matches("[0-9A-F]{8}")) {
+        if (BARE_ARGB.matcher(trimmed).matches()) {
             return (int) Long.parseLong(trimmed, 16);
         }
         return fallback;

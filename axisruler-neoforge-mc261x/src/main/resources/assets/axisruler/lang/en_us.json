@@ -1,4 +1,5 @@
 {
+  "key.axisruler.shortcut_modifier": "Shortcut Modifier",
   "key.categories.axisruler.controls": "AxisRuler",
   "key.category.axisruler.controls": "AxisRuler",
   "key.axisruler.set_point_a": "Set Point A",
@@ -13,6 +14,7 @@
   "key.axisruler.copy_measurement": "Copy Measurement",
   "key.axisruler.pin": "Pin Measurement",
   "key.axisruler.clear_pinned": "Clear Pinned",
+  "key.axisruler.undo": "Undo Point Change",
   "axisruler.message.point_a_set": "Point A set: %s",
   "axisruler.message.point_b_set": "Point B set: %s",
   "axisruler.message.selection_cleared": "Selection cleared",
@@ -25,6 +27,9 @@
   "axisruler.message.line": "Line: %s",
   "axisruler.message.no_block_target": "No block targeted",
   "axisruler.message.measurement_copied": "Measurement copied",
+  "axisruler.message.commands_copied": "Setup commands copied (/fill + //pos1 //pos2)",
+  "axisruler.message.selection_restored": "Point change undone",
+  "axisruler.message.nothing_to_undo": "Nothing to undo",
   "axisruler.message.nothing_to_copy": "Nothing to copy",
   "axisruler.message.copy_different_worlds": "Cannot copy across different worlds",
   "axisruler.message.enabled": "ON",

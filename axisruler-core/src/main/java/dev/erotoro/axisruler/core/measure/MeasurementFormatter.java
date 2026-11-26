@@ -34,4 +34,27 @@ public final class MeasurementFormatter {
         Objects.requireNonNull(vec3, "vec3");
         return formatDecimal(vec3.x()) + ", " + formatDecimal(vec3.y()) + ", " + formatDecimal(vec3.z());
     }
+
+    /**
+     * Ready-to-paste setup commands for the selection: a vanilla {@code /fill} over the
+     * min..max bounds plus WorldEdit {@code //pos1}/{@code //pos2} at the user's actual
+     * Point A / Point B, preserving pick order. Requires a valid measurement.
+     */
+    public static String formatSetupCommands(MeasurementResult result) {
+        Objects.requireNonNull(result, "result");
+        if (!result.valid()) {
+            throw new IllegalArgumentException("setup commands require a valid measurement");
+        }
+        BlockPoint min = result.minBlockPos();
+        BlockPoint max = result.maxBlockPos();
+        MeasurePoint pointA = result.pointAOrNull();
+        MeasurePoint pointB = result.pointBOrNull();
+        return String.join(
+                System.lineSeparator(),
+                "/fill " + min.x() + " " + min.y() + " " + min.z()
+                        + " " + max.x() + " " + max.y() + " " + max.z() + " minecraft:stone",
+                "//pos1 " + pointA.x() + "," + pointA.y() + "," + pointA.z(),
+                "//pos2 " + pointB.x() + "," + pointB.y() + "," + pointB.z()
+        );
+    }
 }

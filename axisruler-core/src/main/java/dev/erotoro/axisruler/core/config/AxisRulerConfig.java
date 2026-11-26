@@ -2,6 +2,7 @@ package dev.erotoro.axisruler.core.config;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public record AxisRulerConfig(
         boolean enabled,
@@ -104,6 +105,10 @@ public record AxisRulerConfig(
     private static final float MAX_CALLOUT_OFFSET = 1.25F;
     private static final float MIN_TICK_SIZE = 0.03F;
     private static final float MAX_TICK_SIZE = 0.22F;
+    private static final Pattern HASH_RGB = Pattern.compile("#[0-9a-fA-F]{6}");
+    private static final Pattern HASH_ARGB = Pattern.compile("#[0-9a-fA-F]{8}");
+    private static final Pattern BARE_RGB = Pattern.compile("[0-9a-fA-F]{6}");
+    private static final Pattern BARE_ARGB = Pattern.compile("[0-9a-fA-F]{8}");
 
     public AxisRulerConfig {
         pointAColor = sanitizeColor(pointAColor, DEFAULT_POINT_A_COLOR);
@@ -468,8 +473,9 @@ public record AxisRulerConfig(
     }
 
     public int effectiveHudAccentColorArgb() {
-        int baseAlpha = (hudAccentColorArgb() >>> 24) & 0xFF;
-        return withAlpha(hudAccentColorArgb(), Math.min(baseAlpha, hudBorderAlpha));
+        int accent = hudAccentColorArgb();
+        int baseAlpha = (accent >>> 24) & 0xFF;
+        return withAlpha(accent, Math.min(baseAlpha, hudBorderAlpha));
     }
 
     public int labelTextColorArgb() {
@@ -795,16 +801,16 @@ public record AxisRulerConfig(
             return fallback;
         }
         String trimmed = color.trim();
-        if (trimmed.matches("#[0-9a-fA-F]{6}")) {
+        if (HASH_RGB.matcher(trimmed).matches()) {
             return ("#FF" + trimmed.substring(1)).toUpperCase(Locale.ROOT);
         }
-        if (trimmed.matches("#[0-9a-fA-F]{8}")) {
+        if (HASH_ARGB.matcher(trimmed).matches()) {
             return trimmed.toUpperCase(Locale.ROOT);
         }
-        if (trimmed.matches("[0-9a-fA-F]{6}")) {
+        if (BARE_RGB.matcher(trimmed).matches()) {
             return ("#FF" + trimmed).toUpperCase(Locale.ROOT);
         }
-        if (trimmed.matches("[0-9a-fA-F]{8}")) {
+        if (BARE_ARGB.matcher(trimmed).matches()) {
             return ("#" + trimmed).toUpperCase(Locale.ROOT);
         }
         return fallback;

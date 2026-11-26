@@ -1,0 +1,60 @@
+plugins {
+    id "net.neoforged.moddev" version "${moddevgradle_version}"
+}
+
+base {
+    archivesName = "${mod_id}-neoforge-mc262x"
+}
+
+neoForge {
+    version = "${neoforge_262x}"
+
+    // The mod id NeoForge associates with this source set (must match neoforge.mods.toml).
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+
+    runs {
+        client {
+            client()
+        }
+    }
+}
+
+dependencies {
+    implementation project(":axisruler-core")
+}
+
+// Bundle the shared core classes/sources straight into the platform jar so the
+// distributed mod is a single self-contained file (mirrors the Fabric modules).
+jar {
+    from(project(":axisruler-core").sourceSets.main.output)
+}
+
+sourcesJar {
+    from(project(":axisruler-core").sourceSets.main.allSource)
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraftRange", minecraft_range_262x
+    inputs.property "neoforgeRange", neoforge_range_262x
+
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand(
+                version: project.version,
+                modId: mod_id,
+                modName: mod_name,
+                modDescription: mod_description,
+                modLicense: mod_license,
+                modAuthors: mod_authors,
+                modHomepage: mod_homepage,
+                modSources: mod_sources,
+                modIssues: mod_issues,
+                minecraftRange: "[${minecraft_262x}]",
+                neoforgeRange: neoforge_range_262x
+        )
+    }
+}

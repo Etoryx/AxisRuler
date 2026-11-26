@@ -1,0 +1,57 @@
+plugins {
+    id "net.fabricmc.fabric-loom" version "${fabric_loom_version}"
+}
+
+base {
+    archivesName = "${mod_id}-mc263x"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_263x}"
+    implementation "net.fabricmc:fabric-loader:${fabric_loader_263x}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_263x}"
+    compileOnly "com.terraformersmc:modmenu:${modmenu_263x}"
+
+    implementation project(":axisruler-core")
+}
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "axisruler_client_tests"
+        enableGameTests = false
+    }
+}
+
+// Bundle the shared core classes/sources straight into the platform jar so the
+// distributed mod is a single self-contained file.
+jar {
+    from(project(":axisruler-core").sourceSets.main.output)
+}
+
+sourcesJar {
+    from(project(":axisruler-core").sourceSets.main.allSource)
+}
+
+// The 26.2 and 26.3 releases use the same translations and icon.
+processResources {
+    from(project(":axisruler-mc262x").file("src/main/resources")) {
+        include "assets/**"
+    }
+
+    inputs.property "version", project.version
+    inputs.property "minecraftRange", minecraft_range_263x
+    inputs.property "loaderVersion", fabric_loader_263x
+    inputs.property "fabricVersion", fabric_api_263x
+    inputs.property "modmenuVersion", modmenu_263x
+
+    filesMatching("fabric.mod.json") {
+        expand(
+                version: project.version,
+                minecraftRange: minecraft_range_263x,
+                loaderVersion: fabric_loader_263x,
+                fabricVersion: fabric_api_263x,
+                modmenuVersion: modmenu_263x
+        )
+    }
+}

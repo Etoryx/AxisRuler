@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import dev.erotoro.axisruler.core.util.ModConstants;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
 public final class ConfigManager {
@@ -36,13 +38,15 @@ public final class ConfigManager {
             JsonElement root = JsonParser.parseReader(reader);
             persistedConfig = fromJson(root);
             previewConfig = null;
-            save();
         } catch (IOException | RuntimeException exception) {
             ModConstants.LOGGER.warn("Failed to load AxisRuler config from {}, using defaults", configPath, exception);
             persistedConfig = AxisRulerConfig.defaults();
             previewConfig = null;
-            save();
+            if (!backupCorruptConfig()) {
+                return persistedConfig;
+            }
         }
+        save();
         return persistedConfig;
     }
 
@@ -103,10 +107,22 @@ public final class ConfigManager {
         return configPath;
     }
 
+    private boolean backupCorruptConfig() {
+        Path backupPath = configPath.resolveSibling(configPath.getFileName() + ".corrupt");
+        try {
+            Files.copy(configPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            ModConstants.LOGGER.warn("Backed up unreadable AxisRuler config to {}", backupPath);
+            return true;
+        } catch (IOException exception) {
+            ModConstants.LOGGER.warn("Failed to back up unreadable AxisRuler config to {}", backupPath, exception);
+            return false;
+        }
+    }
+
     private AxisRulerConfig fromJson(JsonElement root) {
         AxisRulerConfig defaults = AxisRulerConfig.defaults();
         if (root == null || !root.isJsonObject()) {
-            return defaults;
+            throw new JsonParseException("AxisRuler config must be a JSON object");
         }
 
         JsonObject object = root.getAsJsonObject();

@@ -38,7 +38,7 @@ sourcesJar {
 
 processResources {
     inputs.property "version", project.version
-    inputs.property "minecraftRange", minecraft_range_12111
+    inputs.property "minecraftRange", minecraft_12111
     inputs.property "neoforgeRange", neoforge_range_12111
 
     filesMatching("META-INF/neoforge.mods.toml") {
@@ -52,7 +52,7 @@ processResources {
                 modHomepage: mod_homepage,
                 modSources: mod_sources,
                 modIssues: mod_issues,
-                minecraftRange: minecraft_range_12111,
+                minecraftRange: "[${minecraft_12111}]",
                 neoforgeRange: neoforge_range_12111
         )
     }

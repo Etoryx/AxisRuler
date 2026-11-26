@@ -81,6 +81,18 @@ public final class AxisRulerText {
         return Component.translatable(AxisRulerKeys.MESSAGE_PINS_FULL);
     }
 
+    public static Component commandsCopied() {
+        return Component.translatable(AxisRulerKeys.MESSAGE_COMMANDS_COPIED);
+    }
+
+    public static Component selectionRestored() {
+        return Component.translatable(AxisRulerKeys.MESSAGE_SELECTION_RESTORED);
+    }
+
+    public static Component nothingToUndo() {
+        return Component.translatable(AxisRulerKeys.MESSAGE_NOTHING_TO_UNDO);
+    }
+
     private static Component enabledState(boolean enabled) {
         return Component.translatable(enabled ? AxisRulerKeys.MESSAGE_ENABLED : AxisRulerKeys.MESSAGE_DISABLED);
     }

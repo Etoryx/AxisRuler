@@ -23,7 +23,6 @@ public final class ClientInputHandler {
     private final MeasurementService measurementService;
     private final TargetingService targetingService;
     private final ConfigManager configManager;
-    private String lastWorldKey;
 
     public ClientInputHandler(
             KeybindRegistrar keybindRegistrar,
@@ -47,7 +46,8 @@ public final class ClientInputHandler {
             return;
         }
         updateCurrentWorldKey(client);
-        if (client.player == null || client.screen != null) {
+        boolean modifierDown = isShortcutModifierDown(client);
+        if (client.player == null || client.screen != null || !client.isWindowActive()) {
             measurementService.selectionState().setPreviewTarget(null);
             consumeAllPendingKeyPresses();
             return;
@@ -55,7 +55,7 @@ public final class ClientInputHandler {
 
         updatePreviewTarget(client);
 
-        if (!isAltDown(client)) {
+        if (!modifierDown) {
             consumeAllPendingKeyPresses();
             return;
         }
@@ -64,6 +64,7 @@ public final class ClientInputHandler {
         handleSetPointB(client);
         handleClearPoints(client);
         handleSwapPoints(client);
+        handleUndo(client);
         handleCycleMode(client);
         handleToggleHud(client);
         handleToggleGuides(client);
@@ -86,19 +87,10 @@ public final class ClientInputHandler {
     private void updateCurrentWorldKey(Minecraft client) {
         ClientLevel world = client.level;
         if (world == null || client.player == null) {
-            lastWorldKey = null;
             measurementService.selectionState().setCurrentWorldKey(null);
-            measurementService.selectionState().clearPoints();
-            measurementService.selectionState().setPreviewTarget(null);
-            measurementService.selectionState().pinned().clear();
             return;
         }
-        String worldKey = world.dimension().location().toString();
-        if (lastWorldKey != null && !lastWorldKey.equals(worldKey)) {
-            measurementService.selectionState().clearPoints();
-        }
-        lastWorldKey = worldKey;
-        measurementService.selectionState().setCurrentWorldKey(worldKey);
+        measurementService.selectionState().setCurrentWorldKey(world.dimension().location().toString());
     }
 
     private void handleSetPointA(Minecraft client) {
@@ -138,6 +130,16 @@ public final class ClientInputHandler {
                 sendActionBar(client, AxisRulerText.pointsSwapped());
             } else {
                 sendActionBar(client, AxisRulerText.bothPointsRequired());
+            }
+        }
+    }
+
+    private void handleUndo(Minecraft client) {
+        while (keybindRegistrar.undoSelection().consumeClick()) {
+            if (measurementService.selectionState().undoLastPointChange()) {
+                sendActionBar(client, AxisRulerText.selectionRestored());
+            } else {
+                sendActionBar(client, AxisRulerText.nothingToUndo());
             }
         }
     }
@@ -201,8 +203,13 @@ public final class ClientInputHandler {
                 continue;
             }
 
-            client.keyboardHandler.setClipboard(clipboardSummary(pointA, pointB, result));
-            sendActionBar(client, AxisRulerText.measurementCopied());
+            if (isShiftDown(client)) {
+                client.keyboardHandler.setClipboard(MeasurementFormatter.formatSetupCommands(result));
+                sendActionBar(client, AxisRulerText.commandsCopied());
+            } else {
+                client.keyboardHandler.setClipboard(clipboardSummary(pointA, pointB, result));
+                sendActionBar(client, AxisRulerText.measurementCopied());
+            }
         }
     }
 
@@ -233,9 +240,22 @@ public final class ClientInputHandler {
         }
     }
 
-    private boolean isAltDown(Minecraft client) {
+    private boolean isShortcutModifierDown(Minecraft client) {
+        var modifier = keybindRegistrar.shortcutModifier();
+        while (modifier.consumeClick()) {
+            // This binding is held, never executed as an action.
+        }
+        if (!modifier.isDefault()) {
+            return !modifier.isUnbound() && modifier.isDown();
+        }
+        // Keep both Alt keys working until the binding is changed.
         return InputConstants.isKeyDown(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_ALT)
                 || InputConstants.isKeyDown(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_ALT);
+    }
+
+    private boolean isShiftDown(Minecraft client) {
+        return InputConstants.isKeyDown(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT)
+                || InputConstants.isKeyDown(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 
     private void sendActionBar(Minecraft client, Component message) {

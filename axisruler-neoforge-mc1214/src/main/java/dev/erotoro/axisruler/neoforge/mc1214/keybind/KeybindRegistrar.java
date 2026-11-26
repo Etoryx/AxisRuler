@@ -26,6 +26,8 @@ public final class KeybindRegistrar {
     private final KeyMapping copyMeasurement = create(AxisRulerKeys.KEY_COPY_MEASUREMENT, GLFW.GLFW_KEY_M);
     private final KeyMapping pinMeasurement = create(AxisRulerKeys.KEY_PIN, GLFW.GLFW_KEY_P);
     private final KeyMapping clearPinned = create(AxisRulerKeys.KEY_CLEAR_PINNED, GLFW.GLFW_KEY_U);
+    private final KeyMapping undoSelection = create(AxisRulerKeys.KEY_UNDO, GLFW.GLFW_KEY_B);
+    private final KeyMapping shortcutModifier = create(AxisRulerKeys.KEY_SHORTCUT_MODIFIER, GLFW.GLFW_KEY_LEFT_ALT);
     private final List<KeyMapping> keyBindings = List.of(
             setPointA,
             setPointB,
@@ -38,11 +40,17 @@ public final class KeybindRegistrar {
             toggleLine,
             copyMeasurement,
             pinMeasurement,
-            clearPinned
+            clearPinned,
+            undoSelection
     );
 
     public void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         keyBindings.forEach(event::register);
+        event.register(shortcutModifier);
+    }
+
+    public KeyMapping shortcutModifier() {
+        return shortcutModifier;
     }
 
     public List<KeyMapping> keyBindings() {
@@ -95,6 +103,10 @@ public final class KeybindRegistrar {
 
     public KeyMapping clearPinned() {
         return clearPinned;
+    }
+
+    public KeyMapping undoSelection() {
+        return undoSelection;
     }
 
     private KeyMapping create(String translationKey, int defaultKey) {

@@ -81,6 +81,18 @@ public final class AxisRulerText {
         return Text.translatable(AxisRulerKeys.MESSAGE_PINS_FULL);
     }
 
+    public static Text commandsCopied() {
+        return Text.translatable(AxisRulerKeys.MESSAGE_COMMANDS_COPIED);
+    }
+
+    public static Text selectionRestored() {
+        return Text.translatable(AxisRulerKeys.MESSAGE_SELECTION_RESTORED);
+    }
+
+    public static Text nothingToUndo() {
+        return Text.translatable(AxisRulerKeys.MESSAGE_NOTHING_TO_UNDO);
+    }
+
     private static Text enabledState(boolean enabled) {
         return Text.translatable(enabled ? AxisRulerKeys.MESSAGE_ENABLED : AxisRulerKeys.MESSAGE_DISABLED);
     }

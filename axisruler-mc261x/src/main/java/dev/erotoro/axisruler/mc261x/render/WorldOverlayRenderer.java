@@ -3,6 +3,8 @@ package dev.erotoro.axisruler.mc261x.render;
 import dev.erotoro.axisruler.core.config.AxisRulerConfig;
 import dev.erotoro.axisruler.core.config.ConfigManager;
 import dev.erotoro.axisruler.core.geometry.BlockPoint;
+import java.util.HashMap;
+import java.util.Map;
 import dev.erotoro.axisruler.core.geometry.Vec3d;
 import dev.erotoro.axisruler.core.measure.MeasurePoint;
 import dev.erotoro.axisruler.core.measure.MeasurementResult;
@@ -38,12 +40,10 @@ public final class WorldOverlayRenderer {
     private static final double CENTER_MARKER_RADIUS = 0.10D;
     private static final double BASE_LINE_HALF_THICKNESS = 0.0057D;
     private static final double BASE_CALLOUT_HALF_THICKNESS = 0.0038D;
+    private static final int MAX_CACHED_BOX_SHAPES = 64;
     private final MeasurementService measurementService;
     private final ConfigManager configManager;
-    private VoxelShape cachedSelectionShape;
-    private int cachedSizeX = -1;
-    private int cachedSizeY = -1;
-    private int cachedSizeZ = -1;
+    private final Map<BlockPoint, VoxelShape> boxShapeCache = new HashMap<>();
 
     public WorldOverlayRenderer(MeasurementService measurementService, ConfigManager configManager) {
         this.measurementService = measurementService;
@@ -163,7 +163,7 @@ public final class WorldOverlayRenderer {
             float labelAlphaScale,
             boolean showLabel
     ) {
-        VoxelShape shape = Shapes.box(0.0D, 0.0D, 0.0D, result.sizeX(), result.sizeY(), result.sizeZ());
+        VoxelShape shape = boxShape(result.sizeX(), result.sizeY(), result.sizeZ());
         RenderPrimitives.drawShapeOutline(
                 matrices,
                 consumers,
@@ -286,7 +286,7 @@ public final class WorldOverlayRenderer {
             AxisRulerConfig config,
             MeasurementResult result
     ) {
-        VoxelShape shape = selectionShape(result.sizeX(), result.sizeY(), result.sizeZ());
+        VoxelShape shape = boxShape(result.sizeX(), result.sizeY(), result.sizeZ());
         RenderPrimitives.drawShapeOutline(
                 matrices,
                 consumers,
@@ -562,14 +562,14 @@ public final class WorldOverlayRenderer {
         return (color & 0x00FFFFFF) | ((alpha & 0xFF) << 24);
     }
 
-    private VoxelShape selectionShape(int sizeX, int sizeY, int sizeZ) {
-        if (cachedSelectionShape == null || cachedSizeX != sizeX || cachedSizeY != sizeY || cachedSizeZ != sizeZ) {
-            cachedSelectionShape = Shapes.box(0.0D, 0.0D, 0.0D, sizeX, sizeY, sizeZ);
-            cachedSizeX = sizeX;
-            cachedSizeY = sizeY;
-            cachedSizeZ = sizeZ;
+    private VoxelShape boxShape(int sizeX, int sizeY, int sizeZ) {
+        if (boxShapeCache.size() > MAX_CACHED_BOX_SHAPES) {
+            boxShapeCache.clear();
         }
-        return cachedSelectionShape;
+        return boxShapeCache.computeIfAbsent(
+                new BlockPoint(sizeX, sizeY, sizeZ),
+                size -> Shapes.box(0.0D, 0.0D, 0.0D, size.x(), size.y(), size.z())
+        );
     }
 
     private record DimensionCallout(
